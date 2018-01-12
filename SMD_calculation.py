@@ -30,7 +30,8 @@ LSP_data = np.load(LSP_PATH + '\LSP_data_processed_azimuthal.npz')
 sum_DP3_mat = LSP_data['DP3_mat']
 sum_DP2_mat = LSP_data['DP2_mat']
 sum_UP_X_mat = LSP_data['UP_X_mat']
-sum_UP_Y_mat = LSP_data['UP_Y_mat']
+sum_UP_R_mat = LSP_data['UP_R_mat']
+#sum_UP_Y_mat = LSP_data['UP_Y_mat']
 NP_mat = LSP_data['NP_mat']
 x_bins = LSP_data['x_bins']
 r_bins = LSP_data['r_bins']
@@ -38,7 +39,8 @@ LSP_data.close()
 
 SMD_mat = (sum_DP3_mat/sum_DP2_mat)*1000000
 UP_X_mat = sum_UP_X_mat/NP_mat
-UP_Y_mat = sum_UP_Y_mat/NP_mat
+UP_R_mat = sum_UP_R_mat/NP_mat
+#UP_Y_mat = sum_UP_Y_mat/NP_mat
 
 EXP_data = np.load(EXP_PATH + '\EXP_PDA_DD1S2.npz')
 SMD_EXP_z0 = EXP_data['SMD'][EXP_data['z_0']-1]
@@ -53,14 +55,24 @@ UP_X_EXP_z2 = EXP_data['UMeanaxial'][EXP_data['z_2']-1]
 UP_X_EXP_z3 = EXP_data['UMeanaxial'][EXP_data['z_3']-1]
 UP_X_EXP_LIST = [UP_X_EXP_z0,UP_X_EXP_z1,UP_X_EXP_z2,UP_X_EXP_z3]
 
+#must add UP_R_EXP
+#UP_R_EXP_z0 = EXP_data['???'][EXP_data['z_0']-1]
+#UP_R_EXP_z1 = EXP_data['UMeanaxial'][EXP_data['z_1']-1]
+#UP_R_EXP_z2 = EXP_data['UMeanaxial'][EXP_data['z_2']-1]
+#UP_R_EXP_z3 = EXP_data['UMeanaxial'][EXP_data['z_3']-1]
+#UP_R_EXP_LIST = [UP_R_EXP_z0,UP_R_EXP_z1,UP_R_EXP_z2,UP_R_EXP_z3]
+
+
 EXP_SMD_vec = np.array([])
-EXP_UP_vec = np.array([])
+EXP_UP_X_vec = np.array([])
+EXP_UP_R_vec = np.array([])
 EXP_r_vec = np.array([])
 EXP_vec_lens = np.array([1]) #for matlab indexing
 
 #remove points with too few droplets
 SMD_plot_mat = SMD_mat
 UP_X_plot_mat = UP_X_mat
+UP_R_plot_mat = UP_R_mat
 
 for i in range(np.shape(SMD_plot_mat)[0]):
     for j in range(np.shape(SMD_plot_mat)[1]):
@@ -71,6 +83,7 @@ for i in range(np.shape(SMD_plot_mat)[0]):
         if NP_mat[i,j] < LIM:
             SMD_plot_mat[i,j] = np.nan
             UP_X_plot_mat[i,j] = np.nan
+            UP_R_plot_mat[i,j] = np.nan
     
 
 for STATION in range(0,4):
@@ -105,9 +118,22 @@ for STATION in range(0,4):
 #    plt.xlabel('r/D')
     plt.ylabel('Ux/Ub')
     
+    #U_R Figure
+    plt.figure(3,figsize=(8,7))
+#    plt.figure(figsize=(5,2))
+    plt.subplot(NUM)
+    plt.plot(r_bins/D,UP_R_plot_mat[st,:]/Ub,'r')
+    plt.plot(-r_bins/D,UP_R_plot_mat[st,:]/Ub,'r')
+    plt.plot(np.squeeze(EXP_data['r_vec'][EXP_data['z_'+str(st)]-1])/D,np.squeeze(UP_R_EXP_LIST[st])/Ub,'o')
+    plt.xlim([0.0,1.4])
+    plt.ylim([-0.15,0.55])
+#    plt.xlabel('r/D')
+    plt.ylabel('Ur/Ub')
+    
     #Make EXP matrices for use with .mat output
     EXP_SMD_vec = np.append(EXP_SMD_vec,np.squeeze(SMD_EXP_LIST[st]),axis=0)
-    EXP_UP_vec = np.append(EXP_UP_vec,np.squeeze(UP_X_EXP_LIST[st]),axis=0)
+    EXP_UP_X_vec = np.append(EXP_UP_X_vec,np.squeeze(UP_X_EXP_LIST[st]),axis=0)
+    EXP_UP_R_vec = np.append(EXP_UR_vec,np.squeeze(UP_R_EXP_LIST[st]),axis=0)
     EXP_r_vec = np.append(EXP_r_vec,np.squeeze(EXP_data['r_vec'][EXP_data['z_'+str(st)]-1]),axis=0)
     EXP_vec_lens = np.append(EXP_vec_lens,EXP_vec_lens[-1]+len(np.squeeze(EXP_data['r_vec'][EXP_data['z_'+str(st)]-1])))
 
@@ -121,7 +147,7 @@ plt.figure(2).text(0.15,0.6,'x/D = {:1.1f}'.format(st_array[2]))
 plt.figure(2).text(0.15,0.8,'x/D = {:1.1f}'.format(st_array[3]))    
 plt.show
 
-sio.savemat('{:s}'.format(MAT_PATH_FILE),{'UP_X_plot_mat':UP_X_plot_mat,\
+sio.savemat('{:s}'.format(MAT_PATH_FILE),{'UP_X_plot_mat':UP_X_plot_mat,'UP_R_plot_mat':UP_R_plot_mat,\
             'SMD_plot_mat':SMD_plot_mat,'Ub':Ub,'r_bins':r_bins,'D':D,\
             'EXP_r_vec':EXP_r_vec,\
-            'EXP_UP_vec':EXP_UP_vec,'EXP_SMD_vec':EXP_SMD_vec,'EXP_vec_lens':EXP_vec_lens})
+            'EXP_UP_X_vec':EXP_UP_X_vec,'EXP_UP_R_vec':EXP_UP_R_vec,'EXP_SMD_vec':EXP_SMD_vec,'EXP_vec_lens':EXP_vec_lens})
