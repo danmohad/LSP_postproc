@@ -21,23 +21,30 @@ dx = 0.001
 x_bins = np.array([0.01,0.02,0.03,0.04])
 
 #Radial binning
-y_bins,dy = np.linspace(-0.036,0.036,73,retstep=True)
+r_bins,dr = np.linspace(0.0,0.036,37,retstep=True)
+r_bins += dr/2.0
+r_bins = r_bins[0:-1]
+
+#Radial binning
+#y_bins,dy = np.linspace(-0.036,0.036,73,retstep=True)
 
 #Swirl binning
 #dz = 0.0034
-dz = 0.001
-z_bin = np.array([0.0])
+#dz = 0.001
+#z_bin = np.array([0.0])
+
+
 
 #Prepare for outer loop
-NP_mat = np.zeros([len(x_bins),len(y_bins)])
-TP_mat = np.zeros([len(x_bins),len(y_bins)])
-MP_mat = np.zeros([len(x_bins),len(y_bins)])
-DP_mat = np.zeros([len(x_bins),len(y_bins)])
-DP2_mat = np.zeros([len(x_bins),len(y_bins)])
-DP3_mat = np.zeros([len(x_bins),len(y_bins)])
-UP_X_mat = np.zeros([len(x_bins),len(y_bins)])
-UP_Y_mat = np.zeros([len(x_bins),len(y_bins)])
-UP_Z_mat = np.zeros([len(x_bins),len(y_bins)])
+NP_mat = np.zeros([len(x_bins),len(r_bins)])
+TP_mat = np.zeros([len(x_bins),len(r_bins)])
+MP_mat = np.zeros([len(x_bins),len(r_bins)])
+DP_mat = np.zeros([len(x_bins),len(r_bins)])
+DP2_mat = np.zeros([len(x_bins),len(r_bins)])
+DP3_mat = np.zeros([len(x_bins),len(r_bins)])
+UP_X_mat = np.zeros([len(x_bins),len(r_bins)])
+UP_Y_mat = np.zeros([len(x_bins),len(r_bins)])
+UP_Z_mat = np.zeros([len(x_bins),len(r_bins)])
 
 #get path to LSP files
 LSP_files_path = sys.argv[1]
@@ -46,6 +53,8 @@ print LSP_files_path
 #get filenames
 #(_, _, LSP_filename_vec) = walk('C:\Users\Danyal\Box Sync\Stanford\Research\LES\Mastorakos_spray\LSP Data Extraction').next()
 (_, _, LSP_filename_vec) = walk(LSP_files_path).next()
+if 'LSP_data_processed.npz' in LSP_filename_vec:
+    LSP_filename_vec.remove('LSP_data_processed.npz')
 
 #Loop over all files
 for LSP_filename in LSP_filename_vec:
@@ -74,31 +83,33 @@ for LSP_filename in LSP_filename_vec:
     #Assume NPAR_array is all ones (i.e. all parcels only have 1 droplet each)    
     for i in xrange(NPAR_TOT):
         #Determine if droplet is in a bin
-        if z_array[i] < dz and z_array[i] > -dz:
-            if y_array[i] < y_bins.max() + dy and y_array[i] > y_bins.min() - dy:
-                if x_array[i] < x_bins.max() + dx and x_array[i] > x_bins.min() - dx:
-                    if any(np.equal(x_array[i] < x_bins + dx,x_array[i] > x_bins - dx)):
-                        idx_x = np.equal(x_array[i] < x_bins + dx,x_array[i] > x_bins - dx).argmax()
-                        idx_y = np.argmin(np.abs(y_bins - y_array[i]))
-                        #Update droplet stats
-                        NP_mat[idx_x,idx_y] += 1
-                        TP_mat[idx_x,idx_y] += TP_array[i]
-                        MP_mat[idx_x,idx_y] += MP_array[i]
-                        DP_mat[idx_x,idx_y] += DP_array[i]
-                        DP2_mat[idx_x,idx_y] += DP_array[i]**2
-                        DP3_mat[idx_x,idx_y] += DP_array[i]**3
-                        UP_X_mat[idx_x,idx_y] += UP_X_array[i]
-                        UP_Y_mat[idx_x,idx_y] += UP_Y_array[i]
-                        UP_Z_mat[idx_x,idx_y] += UP_Z_array[i]
+        #if z_array[i] < dz and z_array[i] > -dz:
+        #    if y_array[i] < y_bins.max() + dy and y_array[i] > y_bins.min() - dy:
+        if x_array[i] < x_bins.max() + dx and x_array[i] > x_bins.min() - dx:
+            if any(np.equal(x_array[i] < x_bins + dx,x_array[i] > x_bins - dx)):
+                idx_x = np.equal(x_array[i] < x_bins + dx,x_array[i] > x_bins - dx).argmax()
+                #idx_y = np.argmin(np.abs(y_bins - y_array[i]))
+                r_i = np.sqrt(np.square(y_array[i])+np.square(z_array[i]))
+                idx_r = np.argmin(np.abs(r_bins - r_i))
+                #Update droplet stats
+                NP_mat[idx_x,idx_r] += 1
+                TP_mat[idx_x,idx_r] += TP_array[i]
+                MP_mat[idx_x,idx_r] += MP_array[i]
+                DP_mat[idx_x,idx_r] += DP_array[i]
+                DP2_mat[idx_x,idx_r] += DP_array[i]**2
+                DP3_mat[idx_x,idx_r] += DP_array[i]**3
+                UP_X_mat[idx_x,idx_r] += UP_X_array[i]
+                UP_Y_mat[idx_x,idx_r] += UP_Y_array[i]
+                UP_Z_mat[idx_x,idx_r] += UP_Z_array[i]
     #delete dataset object
     del dataset
     
 #Save data to .npz
-outfile_name = LSP_files_path + '/' + 'LSP_data_processed.npz'             
+outfile_name = LSP_files_path + '/' + 'LSP_data_processed_azimuthal.npz'             
 with open(outfile_name,'wb') as outfile:
     np.savez(outfile,NP_mat=NP_mat,TP_mat=TP_mat,MP_mat=MP_mat,DP_mat=DP_mat,\
              DP2_mat=DP2_mat,DP3_mat=DP3_mat,UP_X_mat=UP_X_mat,UP_Y_mat=UP_Y_mat,\
-             UP_Z_mat=UP_Z_mat,x_bins=x_bins,y_bins=y_bins)
+             UP_Z_mat=UP_Z_mat,x_bins=x_bins,r_bins=r_bins)
 
 #Print completion message
 #cwd = os.getcwd()
