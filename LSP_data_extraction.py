@@ -56,6 +56,8 @@ print (LSP_files_path)
 (_, _, LSP_filename_vec) = walk(LSP_files_path).next()
 if 'LSP_data_processed.npz' in LSP_filename_vec:
     LSP_filename_vec.remove('LSP_data_processed.npz')
+if 'LSP_data_processed_azimuthal.npz' in LSP_filename_vec:
+    LSP_filename_vec.remove('LSP_data_processed_azimuthal.npz')
 
 #Loop over all files
 for LSP_filename in LSP_filename_vec:
@@ -94,8 +96,8 @@ for LSP_filename in LSP_filename_vec:
                 r_i = np.sqrt(np.square(y_array[i])+np.square(z_array[i]))
                 idx_r = np.argmin(np.abs(r_bins - r_i))
                 #calc droplet radial velocity
-                nr_vec_i = np.array([x_array[i],y_array[i],z_array[i]])/r_i
-                up_vec_i = np.array([UP_X_array[i],UP_Y_array[i],UP_Z_array[i]])
+                nr_vec_i = np.array([y_array[i],z_array[i]])/r_i
+                up_vec_i = np.array([UP_Y_array[i],UP_Z_array[i]])
                 up_r_i = np.dot(up_vec_i,nr_vec_i)
                 
                 #Update droplet stats
@@ -113,7 +115,7 @@ for LSP_filename in LSP_filename_vec:
     del dataset
     
 #Save data to .npz
-outfile_name = LSP_files_path + '/' + 'LSP_data_processed_azimuthal.npz'             
+outfile_name = LSP_files_path + '/' + 'LSP_data_processed_az_rad.npz'             
 with open(outfile_name,'wb') as outfile:
     np.savez(outfile,NP_mat=NP_mat,TP_mat=TP_mat,MP_mat=MP_mat,DP_mat=DP_mat,\
              DP2_mat=DP2_mat,DP3_mat=DP3_mat,UP_X_mat=UP_X_mat,UP_Y_mat=UP_Y_mat,\
