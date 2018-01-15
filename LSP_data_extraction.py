@@ -9,12 +9,23 @@ Danyal Mohaddes Khorassani
 """
 
 import sys
-#import os
 import tecplot as tp
 import numpy as np
 from os import walk
 
-#Data binning - volumes from Yuan thesis for LDA/PDA measurements, sec. 2.3.1
+#get path to LSP files
+LSP_files_path = sys.argv[1]
+print ('Processing LSP files at path:')
+print (LSP_files_path)
+#get filenames
+#(_, _, LSP_filename_vec) = walk('C:\Users\Danyal\Box Sync\Stanford\Research\LES\Mastorakos_spray\LSP Data Extraction').next()
+(_, _, LSP_filename_vec) = walk(LSP_files_path).next()
+if 'LSP_data_processed.npz' in LSP_filename_vec:
+    LSP_filename_vec.remove('LSP_data_processed.npz')
+if 'LSP_data_processed_azimuthal.npz' in LSP_filename_vec:
+    LSP_filename_vec.remove('LSP_data_processed_azimuthal.npz')
+
+#Data binning - volumes NOT from Yuan thesis for LDA/PDA measurements, sec. 2.3.1
 #Axial binning
 #dx = 0.00015
 dx = 0.001
@@ -33,8 +44,6 @@ r_bins = r_bins[0:-1]
 #dz = 0.001
 #z_bin = np.array([0.0])
 
-
-
 #Prepare for outer loop
 NP_mat = np.zeros([len(x_bins),len(r_bins)])
 TP_mat = np.zeros([len(x_bins),len(r_bins)])
@@ -47,24 +56,13 @@ UP_Y_mat = np.zeros([len(x_bins),len(r_bins)])
 UP_Z_mat = np.zeros([len(x_bins),len(r_bins)])
 UP_R_mat = np.zeros([len(x_bins),len(r_bins)])
 
-#get path to LSP files
-LSP_files_path = sys.argv[1]
-print ('Processing LSP files at path:')
-print (LSP_files_path)
-#get filenames
-#(_, _, LSP_filename_vec) = walk('C:\Users\Danyal\Box Sync\Stanford\Research\LES\Mastorakos_spray\LSP Data Extraction').next()
-(_, _, LSP_filename_vec) = walk(LSP_files_path).next()
-if 'LSP_data_processed.npz' in LSP_filename_vec:
-    LSP_filename_vec.remove('LSP_data_processed.npz')
-if 'LSP_data_processed_azimuthal.npz' in LSP_filename_vec:
-    LSP_filename_vec.remove('LSP_data_processed_azimuthal.npz')
-
 #Loop over all files
-for LSP_filename in LSP_filename_vec:
+for myIter,LSP_filename in enumerate(LSP_filename_vec):
     #print filename for progress tracking purposes
     print ('Processing file:') + LSP_filename
     
     #import data from lsp .plt file
+    tp.new_layout()
     dataset = tp.data.load_tecplot(LSP_files_path + '/' + LSP_filename)
     
     #convert dataset to numpy arrays
@@ -78,6 +76,8 @@ for LSP_filename in LSP_filename_vec:
     UP_X_array = dataset.zone(0).values('UP-X').as_numpy_array()
     UP_Y_array = dataset.zone(0).values('UP-Y').as_numpy_array()
     UP_Z_array = dataset.zone(0).values('UP-Z').as_numpy_array()
+    
+#    print ('sums: ',np.sum(x_array),' ',np.sum(NPAR_array),' ',np.sum(UP_X_array))
     
     #Total number of droplets in domain:
     NPAR_TOT = x_array.size
@@ -112,7 +112,7 @@ for LSP_filename in LSP_filename_vec:
                 UP_Z_mat[idx_x,idx_r] += UP_Z_array[i]
                 UP_R_mat[idx_x,idx_r] += up_r_i
     #delete dataset object
-    del dataset
+#    del dataset
     
 #Save data to .npz
 outfile_name = LSP_files_path + '/' + 'LSP_data_processed_az_rad.npz'             

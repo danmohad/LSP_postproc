@@ -70,16 +70,18 @@ EXP_r_vec = np.array([])
 EXP_vec_lens = np.array([1]) #for matlab indexing
 
 #remove points with too few droplets
-SMD_plot_mat = SMD_mat
-UP_X_plot_mat = UP_X_mat
-UP_R_plot_mat = UP_R_mat
+SMD_plot_mat = np.copy(SMD_mat)
+UP_X_plot_mat = np.copy(UP_X_mat)
+UP_R_plot_mat = np.copy(UP_R_mat)
 
 for i in range(np.shape(SMD_plot_mat)[0]):
     for j in range(np.shape(SMD_plot_mat)[1]):
         if i == 0:
-            LIM = 0.0
+#            LIM = 0.0
+            LIM = 100.0
         else:
             LIM = 1000.0
+#            LIM = 0.0
         if NP_mat[i,j] < LIM:
             SMD_plot_mat[i,j] = np.nan
             UP_X_plot_mat[i,j] = np.nan
